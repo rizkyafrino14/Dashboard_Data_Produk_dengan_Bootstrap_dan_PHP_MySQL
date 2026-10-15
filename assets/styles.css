@@ -1,0 +1,220 @@
+:root {
+    --blue: #1685d9;
+    --dark: #18202b;
+    --line: #e5e9ee;
+    --bg: #f6f8fa
+}
+
+* {
+    box-sizing: border-box
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    font-family: Arial, sans-serif;
+    color: #26313d;
+    font-size: 14px
+}
+
+.app-shell {
+    min-height: 100vh;
+    display: flex
+}
+
+.sidebar {
+    width: 205px;
+    background: #fff;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column
+}
+
+.brand {
+    height: 58px;
+    padding: 20px 14px;
+    background: #151c25;
+    color: #fff;
+    font-size: 12px
+}
+
+.sidebar-nav {
+    padding: 16px 0
+}
+
+.sidebar-nav a,
+.signout {
+    display: block;
+    padding: 9px 14px;
+    color: #2977b6;
+    text-decoration: none;
+    font-size: 11px
+}
+
+.sidebar-nav a i,
+.signout i {
+    width: 20px
+}
+
+.sidebar-nav a:hover,
+.sidebar-nav a.active {
+    background: #edf5fb;
+    color: #1469aa
+}
+
+.signout {
+    margin-top: auto;
+    border-top: 1px solid var(--line);
+    padding: 17px 14px
+}
+
+.main-content {
+    flex: 1;
+    min-width: 0
+}
+
+.topbar {
+    height: 58px;
+    background: #1a232c;
+    color: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 18px
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 15px
+}
+
+.avatar {
+    display: grid;
+    place-items: center;
+    width: 29px;
+    height: 29px;
+    border-radius: 50%;
+    background: #e6f1fb;
+    color: #2478b4;
+    font-size: 10px;
+    font-weight: bold
+}
+
+.content-wrap {
+    padding: 20px 16px;
+    max-width: 1050px
+}
+
+.content-wrap h1 {
+    font-size: 20px;
+    font-weight: 400;
+    margin: 0 0 10px;
+    border-bottom: 1px solid #dfe4e8;
+    padding-bottom: 10px
+}
+
+.panel {
+    background: #fff
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0 8px
+}
+
+.panel-header h2 {
+    font-size: 18px;
+    font-weight: 400;
+    margin: 0
+}
+
+.panel-header .btn {
+    font-size: 11px;
+    padding: 5px 9px
+}
+
+.product-table {
+    font-size: 11px;
+    border-top: 1px solid var(--line)
+}
+
+.product-table th {
+    font-size: 10px;
+    color: #303942;
+    font-weight: bold;
+    background: #fafafa;
+    padding: 8px 7px
+}
+
+.product-table td {
+    padding: 8px 7px;
+    border-bottom: 1px solid #eef0f2
+}
+
+.product-table tbody tr:nth-child(even) {
+    background: #f4f4f4
+}
+
+.action-link {
+    border: 0;
+    background: none;
+    color: #2579b6;
+    text-decoration: none;
+    font-size: 11px;
+    padding: 0 4px
+}
+
+.action-link.delete {
+    color: #bb5360
+}
+
+.empty {
+    text-align: center;
+    color: #888;
+    padding: 22px !important
+}
+
+.database-note {
+    font-size: 10px;
+    color: #7a8794;
+    margin-top: 12px
+}
+
+.database-note i {
+    color: #2780ba
+}
+
+.modal-title {
+    font-size: 16px
+}
+
+.form-label {
+    font-size: 12px
+}
+
+.modal .form-control {
+    font-size: 12px
+}
+
+@media(max-width:700px) {
+    .sidebar {
+        width: 150px
+    }
+
+    .content-wrap {
+        padding: 18px 12px
+    }
+
+    .topbar {
+        padding: 0 14px
+    }
+
+    .product-table {
+        white-space: nowrap
+    }
+}
