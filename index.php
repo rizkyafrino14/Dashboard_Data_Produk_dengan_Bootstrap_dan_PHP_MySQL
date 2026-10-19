@@ -1,46 +1,79 @@
 <?php
-$db = mysqli_connect('localhost', 'root', '');
-if (!$db) die('Koneksi dengan MySQL gagal: ' . mysqli_connect_error());
-mysqli_query($db, "CREATE DATABASE IF NOT EXISTS db_produk CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-mysqli_select_db($db, 'db_produk');
-mysqli_query($db, "CREATE TABLE IF NOT EXISTS produk (id INT AUTO_INCREMENT PRIMARY KEY, nama_barang VARCHAR(100) NOT NULL, harga INT UNSIGNED NOT NULL DEFAULT 0, stok INT UNSIGNED NOT NULL DEFAULT 0, dibuat_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+// Koneksi ke MySQL
+$koneksi = mysqli_connect('localhost', 'root', '');
+
+if (!$koneksi) {
+    die('Koneksi database gagal: ' . mysqli_connect_error());
+}
+
+mysqli_query($koneksi, "CREATE DATABASE IF NOT EXISTS db_produk CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+mysqli_select_db($koneksi, 'db_produk');
+
+$sqlTabel = "CREATE TABLE IF NOT EXISTS produk (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama_barang VARCHAR(100) NOT NULL,
+    harga INT UNSIGNED NOT NULL DEFAULT 0,
+    stok INT UNSIGNED NOT NULL DEFAULT 0,
+    dibuat_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)";
+mysqli_query($koneksi, $sqlTabel);
+
 $pesan = '';
 $jenisPesan = 'success';
+
+// Proses tambah atau hapus data produk
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $aksi = $_POST['aksi'] ?? '';
+
     if ($aksi === 'tambah') {
-        $nama = trim($_POST['nama_barang'] ?? '');
-        $harga = (int)($_POST['harga'] ?? 0);
-        $stok = (int)($_POST['stok'] ?? 0);
-        if ($nama === '' || $harga < 1 || $stok < 0) {
-            $pesan = 'Lengkapi data produk dengan benar.';
+        $namaBarang = trim($_POST['nama_barang'] ?? '');
+        $harga = (int) ($_POST['harga'] ?? 0);
+        $stok = (int) ($_POST['stok'] ?? 0);
+
+        if ($namaBarang === '' || $harga < 1 || $stok < 0) {
+            $pesan = 'Mohon isi data produk dengan benar.';
             $jenisPesan = 'danger';
         } else {
-            $stmt = mysqli_prepare($db, 'INSERT INTO produk (nama_barang, harga, stok) VALUES (?, ?, ?)');
-            mysqli_stmt_bind_param($stmt, 'sii', $nama, $harga, $stok);
-            mysqli_stmt_execute($stmt);
-            mysqli_stmt_close($stmt);
-            $pesan = 'Produk berhasil ditambahkan ke database.';
+            $queryTambah = mysqli_prepare(
+                $koneksi,
+                'INSERT INTO produk (nama_barang, harga, stok) VALUES (?, ?, ?)'
+            );
+            mysqli_stmt_bind_param($queryTambah, 'sii', $namaBarang, $harga, $stok);
+            mysqli_stmt_execute($queryTambah);
+            mysqli_stmt_close($queryTambah);
+
+            $pesan = 'Produk berhasil ditambahkan.';
         }
-    } elseif ($aksi === 'hapus') {
-        $id = (int)($_POST['id'] ?? 0);
-        $stmt = mysqli_prepare($db, 'DELETE FROM produk WHERE id = ?');
-        mysqli_stmt_bind_param($stmt, 'i', $id);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_close($stmt);
+    }
+
+    if ($aksi === 'hapus') {
+        $idProduk = (int) ($_POST['id'] ?? 0);
+        $queryHapus = mysqli_prepare($koneksi, 'DELETE FROM produk WHERE id = ?');
+        mysqli_stmt_bind_param($queryHapus, 'i', $idProduk);
+        mysqli_stmt_execute($queryHapus);
+        mysqli_stmt_close($queryHapus);
+
         $pesan = 'Produk berhasil dihapus.';
     }
 }
-function e(string $value): string
+
+function e(string $teks): string
 {
-    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars($teks, ENT_QUOTES, 'UTF-8');
 }
-function rupiah(int $value): string
+
+function rupiah(int $jumlah): string
 {
-    return 'Rp ' . number_format($value, 0, ',', '.');
+    return 'Rp ' . number_format($jumlah, 0, ',', '.');
 }
-$hasil = mysqli_query($db, 'SELECT id, nama_barang, harga, stok FROM produk ORDER BY id DESC');
-$jumlahProduk = mysqli_num_rows($hasil);
+
+$page = $_GET['page'] ?? 'dashboard';
+
+$hasilProduk = mysqli_query(
+    $koneksi,
+    'SELECT id, nama_barang, harga, stok FROM produk ORDER BY id DESC'
+);
+$jumlahProduk = mysqli_num_rows($hasilProduk);
 ?>
 <!doctype html>
 <html lang="id">
@@ -57,66 +90,61 @@ $jumlahProduk = mysqli_num_rows($hasil);
 <body>
     <div class="app-shell">
         <aside class="sidebar">
-            <div class="brand">stokmart</div>
-            <nav class="sidebar-nav"><a class="active" href="index.php"><i class="bi bi-speedometer2"></i> Dashboard</a><a href="#orders"><i class="bi bi-receipt"></i> Orders</a><a href="#products"><i class="bi bi-box-seam"></i> Products</a><a href="#customers"><i class="bi bi-people"></i> Customers</a><a href="#reports"><i class="bi bi-graph-up"></i> Reports</a><a href="#integrations"><i class="bi bi-puzzle"></i> Integrations</a></nav><a class="signout" href="#signout"><i class="bi bi-box-arrow-right"></i> Sign out</a>
+            <?php include 'menu.php'; ?>
         </aside>
+
         <main class="main-content">
-            <header class="topbar"><strong>Dashboard</strong>
-                <div class="user-menu"><i class="bi bi-bell"></i><span class="avatar">AR</span></div>
+            <header class="topbar">
+                <strong><?= ucfirst(e($page)) ?></strong>
+                <div class="user-menu">
+                    <i class="bi bi-bell"></i>
+                    <span class="avatar">AR</span>
+                </div>
             </header>
+
             <div class="content-wrap">
-                <h1>Dashboard</h1>
-                <section class="panel" id="products">
-                    <div class="panel-header">
-                        <h2>Data Produk</h2><button class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambah"><i class="bi bi-plus-lg"></i> Add Product</button>
-                    </div><?php if ($pesan !== ''): ?><div class="alert alert-<?= $jenisPesan ?> py-2 px-3 small mx-3 mb-3"><?= e($pesan) ?></div><?php endif; ?><div class="table-responsive">
-                        <table class="table table-sm mb-0 product-table">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Nama Barang</th>
-                                    <th>Harga</th>
-                                    <th>Stok</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody><?php if ($jumlahProduk === 0): ?><tr>
-                                        <td colspan="5" class="empty">Belum ada data produk. Klik Add Product untuk menambahkan.</td>
-                                    </tr><?php endif; ?><?php while ($produk = mysqli_fetch_assoc($hasil)): ?><tr>
-                                        <td><?= (int)$produk['id'] ?></td>
-                                        <td><?= e($produk['nama_barang']) ?></td>
-                                        <td><?= rupiah((int)$produk['harga']) ?></td>
-                                        <td><?= (int)$produk['stok'] ?></td>
-                                        <td><a class="action-link" href="#edit">Edit</a>
-                                            <form method="post" class="d-inline" onsubmit="return confirm('Hapus produk ini?')"><input type="hidden" name="aksi" value="hapus"><input type="hidden" name="id" value="<?= (int)$produk['id'] ?>"><button type="submit" class="action-link delete">Hapus</button></form>
-                                        </td>
-                                    </tr><?php endwhile; ?></tbody>
-                        </table>
-                    </div>
-                </section>
-                <p class="database-note"><i class="bi bi-database"></i> Terhubung ke database <strong>db_produk</strong> · <?= $jumlahProduk ?> produk</p>
+                <?php include 'content.php'; ?>
             </div>
         </main>
     </div>
+
     <div class="modal fade" id="modalTambah" tabindex="-1" aria-labelledby="modalTambahLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalTambahLabel">Tambah Product</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    <h5 class="modal-title" id="modalTambahLabel">Tambah Produk</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
-                <form method="post"><input type="hidden" name="aksi" value="tambah">
+
+                <form method="post">
+                    <input type="hidden" name="aksi" value="tambah">
                     <div class="modal-body">
-                        <div class="mb-3"><label class="form-label" for="nama_barang">Nama Barang</label><input class="form-control" id="nama_barang" name="nama_barang" required></div>
+                        <div class="mb-3">
+                            <label class="form-label" for="nama_barang">Nama Barang</label>
+                            <input class="form-control" id="nama_barang" name="nama_barang" required>
+                        </div>
+
                         <div class="row">
-                            <div class="col-7"><label class="form-label" for="harga">Harga</label><input class="form-control" id="harga" name="harga" type="number" min="1" required></div>
-                            <div class="col-5"><label class="form-label" for="stok">Stok</label><input class="form-control" id="stok" name="stok" type="number" min="0" required></div>
+                            <div class="col-7">
+                                <label class="form-label" for="harga">Harga</label>
+                                <input class="form-control" id="harga" name="harga" type="number" min="1" required>
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label" for="stok">Stok</label>
+                                <input class="form-control" id="stok" name="stok" type="number" min="0" required>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-dark">Simpan</button></div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-dark">Simpan</button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
