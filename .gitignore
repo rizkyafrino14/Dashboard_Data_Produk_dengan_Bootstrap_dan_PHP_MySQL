@@ -1,0 +1,3 @@
+tmp/sessions/
+.env
+vendor/
