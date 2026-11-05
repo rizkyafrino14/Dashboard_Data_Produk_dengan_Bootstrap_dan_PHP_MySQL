@@ -9,8 +9,8 @@
     </div>
 
     <?php if ($pesan !== ''): ?>
-        <div class="alert alert-<?= $jenisPesan ?> py-2 px-3 small mx-3 mb-3">
-            <?= e($pesan) ?>
+        <div class="alert alert-<?php echo $jenisPesan; ?> py-2 px-3 small mx-3 mb-3">
+            <?php echo e($pesan); ?>
         </div>
     <?php endif; ?>
 
@@ -32,18 +32,17 @@
                     </tr>
                 <?php endif; ?>
 
-                <?php mysqli_data_seek($hasilProduk, 0); ?>
                 <?php while ($produk = mysqli_fetch_assoc($hasilProduk)): ?>
                     <tr>
-                        <td><?= (int) $produk['id'] ?></td>
-                        <td><?= e($produk['nama_barang']) ?></td>
-                        <td><?= rupiah((int) $produk['harga']) ?></td>
-                        <td><?= (int) $produk['stok'] ?></td>
+                        <td><?php echo (int) $produk['id']; ?></td>
+                        <td><?php echo e($produk['nama_barang']); ?></td>
+                        <td><?php echo rupiah((int) $produk['harga']); ?></td>
+                        <td><?php echo (int) $produk['stok']; ?></td>
                         <td>
                             <a class="action-link" href="#edit">Edit</a>
                             <form method="post" class="d-inline" onsubmit="return confirm('Hapus produk ini?')">
                                 <input type="hidden" name="aksi" value="hapus">
-                                <input type="hidden" name="id" value="<?= (int) $produk['id'] ?>">
+                                <input type="hidden" name="id" value="<?php echo (int) $produk['id']; ?>">
                                 <button type="submit" class="action-link delete">Hapus</button>
                             </form>
                         </td>

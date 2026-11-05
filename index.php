@@ -1,77 +1,100 @@
 <?php
-// Koneksi ke MySQL
-$koneksi = mysqli_connect('localhost', 'root', '');
+require_once("koneksi.php");
 
-if (!$koneksi) {
-    die('Koneksi database gagal: ' . mysqli_connect_error());
-}
-
-mysqli_query($koneksi, "CREATE DATABASE IF NOT EXISTS db_produk CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-mysqli_select_db($koneksi, 'db_produk');
-
-$sqlTabel = "CREATE TABLE IF NOT EXISTS produk (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nama_barang VARCHAR(100) NOT NULL,
-    harga INT UNSIGNED NOT NULL DEFAULT 0,
-    stok INT UNSIGNED NOT NULL DEFAULT 0,
-    dibuat_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)";
-mysqli_query($koneksi, $sqlTabel);
-
-$pesan = '';
-$jenisPesan = 'success';
+$pesan = "";
+$jenisPesan = "success";
 
 // Proses tambah atau hapus data produk
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $aksi = $_POST['aksi'] ?? '';
+    if (isset($_POST['aksi'])) {
+        $aksi = $_POST['aksi'];
+    } else {
+        $aksi = "";
+    }
 
-    if ($aksi === 'tambah') {
-        $namaBarang = trim($_POST['nama_barang'] ?? '');
-        $harga = (int) ($_POST['harga'] ?? 0);
-        $stok = (int) ($_POST['stok'] ?? 0);
+    if ($aksi === "tambah") {
+        if (isset($_POST['nama_barang'])) {
+            $namaBarang = trim($_POST['nama_barang']);
+        } else {
+            $namaBarang = "";
+        }
 
-        if ($namaBarang === '' || $harga < 1 || $stok < 0) {
-            $pesan = 'Mohon isi data produk dengan benar.';
-            $jenisPesan = 'danger';
+        if (isset($_POST['harga'])) {
+            $harga = (int) $_POST['harga'];
+        } else {
+            $harga = 0;
+        }
+
+        if (isset($_POST['stok'])) {
+            $stok = (int) $_POST['stok'];
+        } else {
+            $stok = 0;
+        }
+
+        if ($namaBarang == "" || $harga < 1 || $stok < 0) {
+            $pesan = "Mohon isi data produk dengan benar.";
+            $jenisPesan = "danger";
         } else {
             $queryTambah = mysqli_prepare(
                 $koneksi,
-                'INSERT INTO produk (nama_barang, harga, stok) VALUES (?, ?, ?)'
+                "INSERT INTO produk (nama_barang, harga, stok) VALUES (?, ?, ?)"
             );
             mysqli_stmt_bind_param($queryTambah, 'sii', $namaBarang, $harga, $stok);
             mysqli_stmt_execute($queryTambah);
             mysqli_stmt_close($queryTambah);
 
-            $pesan = 'Produk berhasil ditambahkan.';
+            $pesan = "Produk berhasil ditambahkan.";
         }
     }
 
-    if ($aksi === 'hapus') {
-        $idProduk = (int) ($_POST['id'] ?? 0);
-        $queryHapus = mysqli_prepare($koneksi, 'DELETE FROM produk WHERE id = ?');
+    if ($aksi === "hapus") {
+        if (isset($_POST['id'])) {
+            $idProduk = (int) $_POST['id'];
+        } else {
+            $idProduk = 0;
+        }
+
+        $queryHapus = mysqli_prepare($koneksi, "DELETE FROM produk WHERE id = ?");
         mysqli_stmt_bind_param($queryHapus, 'i', $idProduk);
         mysqli_stmt_execute($queryHapus);
         mysqli_stmt_close($queryHapus);
 
-        $pesan = 'Produk berhasil dihapus.';
+        $pesan = "Produk berhasil dihapus.";
     }
 }
 
-function e(string $teks): string
+function e($teks)
 {
     return htmlspecialchars($teks, ENT_QUOTES, 'UTF-8');
 }
 
-function rupiah(int $jumlah): string
+function rupiah($jumlah)
 {
     return 'Rp ' . number_format($jumlah, 0, ',', '.');
 }
 
-$page = $_GET['page'] ?? 'dashboard';
+if (isset($_GET['page'])) {
+    $page = $_GET['page'];
+} else {
+    $page = "dashboard";
+}
+
+$judulHalaman = array(
+    "dashboard" => "Dashboard",
+    "produk" => "Products",
+    "orders" => "Orders",
+    "customers" => "Customers"
+);
+
+if (isset($judulHalaman[$page])) {
+    $judulTopbar = $judulHalaman[$page];
+} else {
+    $judulTopbar = "Dashboard";
+}
 
 $hasilProduk = mysqli_query(
     $koneksi,
-    'SELECT id, nama_barang, harga, stok FROM produk ORDER BY id DESC'
+    "SELECT id, nama_barang, harga, stok FROM produk ORDER BY id DESC"
 );
 $jumlahProduk = mysqli_num_rows($hasilProduk);
 ?>
@@ -90,12 +113,12 @@ $jumlahProduk = mysqli_num_rows($hasilProduk);
 <body>
     <div class="app-shell">
         <aside class="sidebar">
-            <?php include 'menu.php'; ?>
+            <?php require 'menu.php'; ?>
         </aside>
 
         <main class="main-content">
             <header class="topbar">
-                <strong><?= ucfirst(e($page)) ?></strong>
+                <strong><?php echo e($judulTopbar); ?></strong>
                 <div class="user-menu">
                     <i class="bi bi-bell"></i>
                     <span class="avatar">AR</span>
@@ -103,7 +126,7 @@ $jumlahProduk = mysqli_num_rows($hasilProduk);
             </header>
 
             <div class="content-wrap">
-                <?php include 'content.php'; ?>
+                <?php require 'content.php'; ?>
             </div>
         </main>
     </div>
